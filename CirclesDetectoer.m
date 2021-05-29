@@ -1,6 +1,6 @@
 tic
 clear,clc
-CircleHoughTransform(12)
+CircleHoughTransform()
 toc
 
 
