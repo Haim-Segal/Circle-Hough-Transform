@@ -9,7 +9,7 @@ function CircleHoughTransform(MinPoints,MinRadius,MaxRadius)
 [image,m,n] = ReadImage('DottedCircles.png');
 [LabeledImage,Labels] = LabelImage();
 SetRadiiAndMinPoints(nargin);
-RadiiRange = MaxRadius-MinRadius+1;
+RadiiRange = MaxRadius - MinRadius + 1;
 [theta,phase] = MatchPhaseToEachRadius(RadiiRange);
 CosSinlinspace = cell(2,RadiiRange);
 AccumulatorMat = zeros(m,n);
@@ -129,8 +129,8 @@ imshow(DrawCirclesMat);
 
             function KeepInBordersPixelsOnly(m,n)
                 log = a > 0 & a <= n & b > 0 & b <= m;
-                a=a(log);
-                b=b(log);
+                a = a(log);
+                b = b(log);
             end
 
             function AddOrSubtractRadiusPhase(sign,rphase)
