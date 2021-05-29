@@ -8,5 +8,5 @@ The problem with the classical Hough Transform is the requirement of a 3-D array
 Phase Coding method solve this problem by using a single 2-D accumulator array for all the radii. The key idea is the use of complex values in the accumulator array with the radius information encoded in the phase of the array entries.
 
 
-# A glimpse into the algorithm
+# A Glimpse Into the Algorithm
 ![מסמך ללא שם-1](https://user-images.githubusercontent.com/82455000/120086676-a26e9080-c0e9-11eb-952b-878eab33c9fc.png)
