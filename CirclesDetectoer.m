@@ -1,7 +1,6 @@
-tic
 clear,clc
 CircleHoughTransform()
-toc
+
 
 
 function CircleHoughTransform(MinPoints,MinRadius,MaxRadius)
