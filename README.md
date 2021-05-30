@@ -24,7 +24,7 @@ global and local absolute accumulator arrays through the process
 ## Installation and Usage
 Save the scripts in the same folder.
 
-Run DottedCirclesMaker.m to create and save an impefect image of circles. In addition to the imperfect image, the script plots a figure of the whole circles which the imperfect image created from for comparison with the dected circles.<br/>
+Run DottedCirclesMaker.m to create and save an impefect image of circles. In addition to the imperfect image, the script plots a figure of the whole circles which the imperfect image created from which can be used for comparison with the detcted circles.<br/>
 in the function call you can insert the number of dotted circles you wish to create, number of noise dots and the minimum number of dots for each circle. you can also call the funtion without any arguments to get a random number of dotted circles betwwen 3 to 10, without noise dots and minimum number of 30 dots for each circle. you can also insert only one argument to choose the number of circles or only two arguments to choose the number of noise points too.
 
 After creating the imperfect image, run CirclsDetector.m to detect the circles. the script will plot the detected circles and the rest of unused pixels. in the function call you can insert the minimun number dots needed to create a circle or leave it empty to set the defult minimum of 4 points.  
