@@ -10,16 +10,14 @@ Phase Coding method solve this problem by using a single 2-D accumulator array f
 
 ## A Glimpse Into the Algorithm
 
-imperfect image
+imperfect image vs detected circles
 
-![imperfect image](https://user-images.githubusercontent.com/82455000/120093199-4f183480-c121-11eb-9344-a760d5e5d0e2.png)
+![dotted and found](https://user-images.githubusercontent.com/82455000/120094977-fac68200-c12b-11eb-97f7-41884f14ddfe.png)
 
-absolute accumulator array
+absolute accumulator array through the process
 
-![1](https://user-images.githubusercontent.com/82455000/120093519-81c32c80-c123-11eb-91a0-38c90328bf7b.png)
-![2](https://user-images.githubusercontent.com/82455000/120093520-82f45980-c123-11eb-966f-ae37b451c69f.png)
-![3](https://user-images.githubusercontent.com/82455000/120093521-84258680-c123-11eb-8f1c-261939728352.png)
+![first](https://user-images.githubusercontent.com/82455000/120094854-78d65900-c12b-11eb-8180-c933029b5c56.png)
+![second](https://user-images.githubusercontent.com/82455000/120094865-84c21b00-c12b-11eb-817f-fc00bfdba170.png)
+![third](https://user-images.githubusercontent.com/82455000/120094878-9277a080-c12b-11eb-96e3-1107c55c06ea.png)
 
-detected circles
 
-![found](https://user-images.githubusercontent.com/82455000/120093653-5c82ee00-c124-11eb-8eba-6d6339b3e88f.png)
