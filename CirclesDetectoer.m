@@ -6,7 +6,7 @@ CircleHoughTransform()
 function CircleHoughTransform(MinPoints,MinRadius,MaxRadius)
 
 [image,m,n] = ReadImage('DottedCircles.png');
-[LabeledImage,Labels] = LabelImage();
+[LabeledImage,labels] = LabelImage();
 SetRadiiAndMinPoints(nargin);
 RadiiRange = MaxRadius - MinRadius + 1;
 [theta,phase] = MatchPhaseToEachRadius(RadiiRange);
@@ -14,7 +14,7 @@ CosSinlinspace = cell(2,RadiiRange);
 AccumulatorMat = zeros(m,n);
 DrawCirclesMat = ones(m,n);
 AccumulateOrDiminish(1,m,n)
-while Labels > 4
+while labels > 4
     [R,Xcen,Ycen] = AbsAccumulator();
     RelevantAreaMat = RelevantArea(R,Xcen,Ycen,MinRadius,10,m,n);
     [LocalAccumulatorMat,LocalMinRadius,RadiiRangeLocal,Localtheta,Localx,Localy] = LocalAccumulator(R,MinRadius,MaxRadius,m,n);
@@ -26,7 +26,7 @@ while Labels > 4
     RelevantAreaMat = RelevantArea(R,Xcen,Ycen,MinRadius,2,m,n);
     AccumulateOrDiminish(-1,m,n)
     LabeledImage(logical(RelevantAreaMat)) = 1;
-    [~,Labels] = bwlabel(~LabeledImage,4);
+    [~,labels] = bwlabel(~LabeledImage,4);
 end
 figure
 DrawCirclesMat = DrawCirclesMat  -~LabeledImage;
@@ -37,7 +37,7 @@ imshow(DrawCirclesMat);
         bwMat = Image2BinaryMat(ImageName);
         RemoveBordersAndGetSizes();
 
-        function bwMat= Image2BinaryMat(ImageName)
+        function bwMat = Image2BinaryMat(ImageName)
             A = imread(ImageName);
             A = im2gray(A);
             bwMat = imbinarize(A);
@@ -57,15 +57,15 @@ imshow(DrawCirclesMat);
         end
     end
 
-    function [LabeledImage,Labels] = LabelImage()
+    function [LabeledImage,labels] = LabelImage()
         CONNECTIVITY = 4;
-        [image,Labels] = bwlabel(~image,CONNECTIVITY);
+        [image,labels] = bwlabel(~image,CONNECTIVITY);
         MeanPoints();
 
         function MeanPoints()
             AVERAGE_HELPER = 0.3;
             LI = ones(m,n);
-            for label = 1:Labels
+            for label = 1:labels
                 [LIm,LIn] = find(image == label);
                 LI(round(mean(LIm) - AVERAGE_HELPER):round(mean(LIm) + AVERAGE_HELPER),round(mean(LIn) - AVERAGE_HELPER):round(mean(LIn) + AVERAGE_HELPER)) = 0;
             end
@@ -191,7 +191,7 @@ imshow(DrawCirclesMat);
 
             function ExtractRadiusOutOfPhase(NumberOfInputArguments,NumberOfVicinityPixels)
                 SumPhase = 0;
-                if NumberOfInputArguments==0
+                if NumberOfInputArguments == 0
                     for VicinityPixel = 1:NumberOfVicinityPixels
                         SumPhase=SumPhase+AccumulatorMat(y(VicinityPixel),x(VicinityPixel));
                     end
