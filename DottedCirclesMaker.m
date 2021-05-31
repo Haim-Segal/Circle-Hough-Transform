@@ -103,7 +103,7 @@ ImageShow('WholeCircles')
 
     function rb = RemoveBorders(Mat)
         for side=1:4
-            while all(Mat(:,1:2))
+            while all(Mat(:,1))
                 Mat(:,1) = [];
             end
             Mat = rot90(Mat);
