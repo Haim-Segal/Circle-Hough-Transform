@@ -323,7 +323,7 @@ imshow(DrawCirclesMat);
             ExtractRadiusAndCenterOutOfCR(STEP,Xcen,Ycen,LocalMinRadius,MaxVotes)
 
             function ExtractRadiusAndCenterOutOfCR(STEP,Xcen,Ycen,LocalMinRadius,votes)
-                RCR=round(mean(RealCR(ImagCR==votes)));
+                RCR=round(mean(RealCR(ImagCR == votes)));
                 [i,j] = find(ImagCR == votes);
                 bCR = round(mean(i));
                 aCR = round(mean(j));
