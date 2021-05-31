@@ -52,7 +52,7 @@ imshow(DrawCirclesMat);
             end
             m = size(bwMat,1);
             n = size(bwMat,2);
-            bwMat([1:2,m-1:m],[1:2,n-1:n]) = 1;
+            bwMat([1:2,m - 1:m],[1:2,n - 1:n]) = 1;
             image = bwMat;
         end
     end
@@ -183,7 +183,7 @@ imshow(DrawCirclesMat);
 
                 function keepOnlyVicinityPixels()
                     VICINITY_SQUARE_RADIUS = 100;
-                    log = (y - max_y).^2 +(x - max_x).^2 < VICINITY_SQUARE_RADIUS;
+                    log = (y - max_y).^2 + (x - max_x).^2 < VICINITY_SQUARE_RADIUS;
                     y = y(log);
                     x = x(log);
                 end
@@ -193,9 +193,9 @@ imshow(DrawCirclesMat);
                 SumPhase = 0;
                 if NumberOfInputArguments == 0
                     for VicinityPixel = 1:NumberOfVicinityPixels
-                        SumPhase=SumPhase+AccumulatorMat(y(VicinityPixel),x(VicinityPixel));
+                        SumPhase = SumPhase+AccumulatorMat(y(VicinityPixel),x(VicinityPixel));
                     end
-                    [~,PhaseRadius] = min(abs(theta-angle(SumPhase)));
+                    [~,PhaseRadius] = min(abs(theta - angle(SumPhase)));
                     R = PhaseRadius + MinRadius - 1;
                 else
                     for VicinityPixel = 1:NumberOfVicinityPixels
@@ -209,8 +209,8 @@ imshow(DrawCirclesMat);
     end
 
     function RelevantAreaMat = RelevantArea(R,Xcen,Ycen,MinRadius,width,m,n)
-        x = round(R.*CosSinlinspace{1,R - MinRadius+1} + Xcen);
-        y = round(R.*CosSinlinspace{2,R - MinRadius+1} + Ycen);
+        x = round(R.*CosSinlinspace{1,R - MinRadius + 1} + Xcen);
+        y = round(R.*CosSinlinspace{2,R - MinRadius + 1} + Ycen);
         KeepInBordersPixelsOnly(m,n)
         MarkRelevatAreaAndDrawCircle(length(x),width,m,n)
 
@@ -288,7 +288,7 @@ imshow(DrawCirclesMat);
     end
 
     function [Radius,Xcenter,Ycenter,MaxVotes] = SetRadiusAndCenter(STEP,Xcen,Ycen,RadiiRangeLocal,LocalMinRadius)
-        CenterAndRadius = zeros(2*STEP+1);
+        CenterAndRadius = zeros(2*STEP + 1);
         BlackPoints = length(Localx);
         for a = Xcen - STEP:Xcen + STEP
             for b = Ycen - STEP:Ycen + STEP
@@ -305,7 +305,7 @@ imshow(DrawCirclesMat);
         function AccumulateRadius(bp,a,b,LocalMinRadius,RadiiRangeLocal)
             ar = round(dist([Localy(bp),Localx(bp)],[a;b])) - LocalMinRadius + 1;
             if ar > 0 && ar <= RadiiRangeLocal
-                RadiusAccumulator(ar) = RadiusAccumulator(ar) +1 ;
+                RadiusAccumulator(ar) = RadiusAccumulator(ar) + 1 ;
             end
         end
 
@@ -313,7 +313,7 @@ imshow(DrawCirclesMat);
             maxRA = max(RadiusAccumulator);
             RA = find(RadiusAccumulator == maxRA);
             RA = round(mean(RA));
-            CenterAndRadius(b - Ycen + STEP + 1,a - Xcen + STEP + 1)=complex(RA,maxRA);
+            CenterAndRadius(b - Ycen + STEP + 1,a - Xcen + STEP + 1) = complex(RA,maxRA);
         end
 
         function FindRadiusAndCenter(STEP,Xcen,Ycen,LocalMinRadius)
