@@ -29,7 +29,7 @@ while labels > 4
     [~,labels] = bwlabel(~LabeledImage,4);
 end
 figure
-DrawCirclesMat = DrawCirclesMat  -~LabeledImage;
+DrawCirclesMat = DrawCirclesMat  - ~LabeledImage;
 imshow(DrawCirclesMat);
 
 
@@ -193,7 +193,7 @@ imshow(DrawCirclesMat);
                 SumPhase = 0;
                 if NumberOfInputArguments == 0
                     for VicinityPixel = 1:NumberOfVicinityPixels
-                        SumPhase = SumPhase+AccumulatorMat(y(VicinityPixel),x(VicinityPixel));
+                        SumPhase = SumPhase + AccumulatorMat(y(VicinityPixel),x(VicinityPixel));
                     end
                     [~,PhaseRadius] = min(abs(theta - angle(SumPhase)));
                     R = PhaseRadius + MinRadius - 1;
@@ -264,16 +264,16 @@ imshow(DrawCirclesMat);
         function CreateCircleAroundEachPixel(m,n,r,rCosSin,rPhase)
             BlackPoints = length(y);
             for BlackPoint = 1:BlackPoints
-                a = round(x(BlackPoint) -r.*CosSinlinspace{1,rCosSin});
-                b = round(y(BlackPoint) -r.*CosSinlinspace{2,rCosSin});
+                a = round(x(BlackPoint) - r.*CosSinlinspace{1,rCosSin});
+                b = round(y(BlackPoint) - r.*CosSinlinspace{2,rCosSin});
                 KeepInBordersPixelsOnly(m,n)
                 AddRadiusPhase(rPhase)
             end
 
             function KeepInBordersPixelsOnly(m,n)
                 log = a > 0 & a <= n & b > 0 & b <= m;
-                a=a(log);
-                b=b(log);
+                a = a(log);
+                b = b(log);
             end
 
             function AddRadiusPhase(rPhase)
@@ -323,7 +323,7 @@ imshow(DrawCirclesMat);
             ExtractRadiusAndCenterOutOfCR(STEP,Xcen,Ycen,LocalMinRadius,MaxVotes)
 
             function ExtractRadiusAndCenterOutOfCR(STEP,Xcen,Ycen,LocalMinRadius,votes)
-                RCR=round(mean(RealCR(ImagCR == votes)));
+                RCR = round(mean(RealCR(ImagCR == votes)));
                 [i,j] = find(ImagCR == votes);
                 bCR = round(mean(i));
                 aCR = round(mean(j));
