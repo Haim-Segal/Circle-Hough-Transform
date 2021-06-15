@@ -12,7 +12,7 @@ But, a new problem arises using the Phase Coding method which is the accuracy of
 To solve this problem I use Phase Coding twice for each circle, once to get a global accumulator array and than one more time for a thin ring of radii around the estimated center and radius I've found from the global accumulator. from the local accumulator array I get a more precise center candidate, than I use a voting process to get even more precise center and radius, avoiding the complexity of the classical algoritm by taking only the near vicinity pixels of the estimated center as candidates for the center and than calculating the distances between each of the center candidates and the pixels found in the thin ring. More over, I keep the Phase Coding approach and use a complex 2-D array instead of 3-D array, storing the estimated radius in the real part and its votes in the imaginary part of each array entries.
 ## A Glimpse Into the Algorithm
 
-imperfect image vs detected circles
+imperfect image (left) vs detected circles (right)
 
 ![dotted and found](https://user-images.githubusercontent.com/82455000/120094977-fac68200-c12b-11eb-97f7-41884f14ddfe.png)
 
