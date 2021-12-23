@@ -33,38 +33,40 @@ function [mat, size1, size2] = readImage(imgPath)
     [mat, size1, size2] = removeBordersAndGetSizes(binaryMat);
 end
 
-function labeledImage = centerPoints(size1, size2, labels, mat)
+function labeledMat = centerLabelsPoints(size1, size2, labels, labeledMat)
     AVERAGE_HELPER = 0.3;
-    LI = ones(size1, size2);
+    tempMat = ones(size1, size2);
     for label = 1:labels
-        [LIm, LIn] = find(mat == label);
-        LI(round(mean(LIm) - AVERAGE_HELPER):round(mean(LIm) + AVERAGE_HELPER), round(mean(LIn) - AVERAGE_HELPER):round(mean(LIn) + AVERAGE_HELPER)) = 0;
+        [lebeledSpace1, labeledSpace2] = find(labeledMat == label);
+        tempMat(round(mean(lebeledSpace1) - AVERAGE_HELPER):round(mean(lebeledSpace1) + AVERAGE_HELPER), round(mean(labeledSpace2) - AVERAGE_HELPER):round(mean(labeledSpace2) + AVERAGE_HELPER)) = 0;
     end
-    labeledImage = LI;
+    labeledMat = tempMat;
 end
 
-function [labeledImage, labels] = connectedSpaces(mat, size1, size2)
+function [labeledMat, labels] = connectedSpaces(mat, size1, size2)
     CONNECTIVITY = 4;
-    [mat, labels] = bwlabel(~ mat, CONNECTIVITY);
-    labeledImage = centerPoints(size1, size2, labels, mat);
+    [labeledMat, labels] = bwlabel(~ mat, CONNECTIVITY);
+    labeledMat = centerLabelsPoints(size1, size2, labels, labeledMat);
 end
 
-
+function [theta, phase] = matchPhaseToEachRadius(radiiRange)
+    theta = linspace(- pi + 2 * pi / radiiRange, pi, radiiRange);
+    phase = complex(cos(theta),sin(theta));
+end
 
 
 function circleHoughTransform(minPoints, minRadius, maxRadius)
 
 [mat, size1, size2] = readImage('DottedCircles.png');
-[labeledImage, labels] = connectedSpaces(mat, size1, size2);
-
-
-
+[labeledMat, labels] = connectedSpaces(mat, size1, size2);
 setRadiiAndMinPoints(nargin);
 radiiRange = maxRadius - minRadius + 1;
 [theta, phase] = matchPhaseToEachRadius(radiiRange);
 cosSinlinspace = cell(2, radiiRange);
 accumulatorMat = zeros(size1, size2);
 drawCirclesMat = ones(size1, size2);
+
+
 accumulateOrDiminish(1, size1, size2)
 while labels > 4
     [rad, xCen, yCen] = absAccumulator();
@@ -77,14 +79,12 @@ while labels > 4
     end
     relevantAreaMat = relevantArea(rad, xCen, yCen, minRadius, 2, size1, size2);
     accumulateOrDiminish(- 1, size1, size2)
-    labeledImage(logical(relevantAreaMat)) = 1;
-    [~, labels] = bwlabel(~ labeledImage, 4);
+    labeledMat(logical(relevantAreaMat)) = 1;
+    [~, labels] = bwlabel(~ labeledMat, 4);
 end
 figure
-drawCirclesMat = drawCirclesMat  - ~ labeledImage;
+drawCirclesMat = drawCirclesMat  - ~ labeledMat;
 imshow(drawCirclesMat);
-
-
 
 
 
@@ -103,10 +103,12 @@ imshow(drawCirclesMat);
         end
     end
 
-    function [theta, phase] = matchPhaseToEachRadius(radiiRange)
-        theta = linspace(- pi + 2 * pi / radiiRange, pi, radiiRange);
-        phase = complex(cos(theta),sin(theta));
-    end
+
+
+
+
+
+
 
     function accumulateOrDiminish(sign, size1, size2)
         [y, x] = findBlackPixels(sign);
@@ -121,9 +123,9 @@ imshow(drawCirclesMat);
 
         function [y, x] = findBlackPixels(sign)
             if sign == 1
-                [y, x] = find(labeledImage == 0);
+                [y, x] = find(labeledMat == 0);
             else
-                [y, x] = find(~ labeledImage .* relevantAreaMat == 1);
+                [y, x] = find(~ labeledMat .* relevantAreaMat == 1);
             end
         end
 
@@ -262,7 +264,7 @@ imshow(drawCirclesMat);
         localAccumulatorMat = LAMat;
 
         function [y, x] = findBlackPixels()
-            [y, x] = find(~ labeledImage .* relevantAreaMat == 1);
+            [y, x] = find(~ labeledMat .* relevantAreaMat == 1);
         end
 
         function [localMinRadius, localMaxRadius, localRadiiRange] = setLocalRadii(rad, minRadius, maxRadius)
