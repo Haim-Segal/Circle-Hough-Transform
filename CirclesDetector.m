@@ -9,44 +9,44 @@ function binaryMat = imgToBinaryMat(imgPath)
     binaryMat = imbinarize(im2gray(imread(imgPath)));
 end
 
-function binaryMat = removeBorders(binaryMat)
+function mat = removeBorders(mat)
     for side = 1:4
-        while all(binaryMat(:, 1))
-            binaryMat(:, 1) = [];
+        while all(mat(:, 1))
+            mat(:, 1) = [];
         end
-        binaryMat = rot90(binaryMat);
+        mat = rot90(mat);
     end
 end
 
-function binaryMat = whitePerimeter(binaryMat, size1, size2)
-    binaryMat([1:2, size1 - 1:size1], [1:2, size2 - 1:size2]) = 1;
+function mat = whitePerimeter(mat, size1, size2)
+    mat([1:2, size1 - 1:size1], [1:2, size2 - 1:size2]) = 1;
 end
 
-function [image, size1, size2] = removeBordersAndGetSizes(binaryMat)
-    binaryMat = removeBorders(binaryMat);
-    [size1, size2] = size(binaryMat);
-    image = whitePerimeter(binaryMat, size1, size2);
+function [mat, size1, size2] = removeBordersAndGetSizes(mat)
+    mat = removeBorders(mat);
+    [size1, size2] = size(mat);
+    mat = whitePerimeter(mat, size1, size2);
 end
 
-function [image, size1, size2] = readImage(imgPath)
+function [mat, size1, size2] = readImage(imgPath)
     binaryMat = imgToBinaryMat(imgPath);
-    [image, size1, size2] = removeBordersAndGetSizes(binaryMat);
+    [mat, size1, size2] = removeBordersAndGetSizes(binaryMat);
 end
 
-function labeledImage = meanPoints(size1, size2, labels, image)
+function labeledImage = centerPoints(size1, size2, labels, mat)
     AVERAGE_HELPER = 0.3;
     LI = ones(size1, size2);
     for label = 1:labels
-        [LIm, LIn] = find(image == label);
+        [LIm, LIn] = find(mat == label);
         LI(round(mean(LIm) - AVERAGE_HELPER):round(mean(LIm) + AVERAGE_HELPER), round(mean(LIn) - AVERAGE_HELPER):round(mean(LIn) + AVERAGE_HELPER)) = 0;
     end
     labeledImage = LI;
 end
 
-function [labeledImage, labels] = labelImage(image, size1, size2)
+function [labeledImage, labels] = connectedSpaces(mat, size1, size2)
     CONNECTIVITY = 4;
-    [image, labels] = bwlabel(~ image, CONNECTIVITY);
-    labeledImage = meanPoints(size1, size2, labels, image);
+    [mat, labels] = bwlabel(~ mat, CONNECTIVITY);
+    labeledImage = centerPoints(size1, size2, labels, mat);
 end
 
 
@@ -54,11 +54,8 @@ end
 
 function circleHoughTransform(minPoints, minRadius, maxRadius)
 
-[image, size1, size2] = readImage('DottedCircles.png');
-
-
-
-[labeledImage, labels] = labelImage(image, size1, size2);
+[mat, size1, size2] = readImage('DottedCircles.png');
+[labeledImage, labels] = connectedSpaces(mat, size1, size2);
 
 
 
