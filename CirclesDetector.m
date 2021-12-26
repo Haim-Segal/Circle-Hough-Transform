@@ -1,5 +1,5 @@
-tic
 clear,clc,close all
+tic
 circleHoughTransform()
 toc
 
@@ -54,6 +54,20 @@ function [theta, phase] = matchPhaseToEachRadius(radiiRange)
     phase = complex(cos(theta),sin(theta));
 end
 
+function [y, x] = findBlackPixels1(labeledMat)
+    [y, x] = find(labeledMat == 0);
+end
+
+function cosSinlinspace = fillCosSinlinspace(r, rCosSin, cosSinlinspace)
+    omega = linspace(1 / r, 2 * pi, ceil(2 * pi * r));
+    cosSinlinspace(:, rCosSin) = {cos(omega), sin(omega)};
+end
+
+function [a, b] = keepInBordersPixelsOnly(a, b, size1, size2)
+    log = a > 0 & a <= size2 & b > 0 & b <= size1;
+    a = a(log);
+    b = b(log);
+end
 
 function circleHoughTransform(minPoints, minRadius, maxRadius)
 
@@ -67,7 +81,7 @@ accumulatorMat = zeros(size1, size2);
 drawCirclesMat = ones(size1, size2);
 
 
-cosSinlinspace = accumulate(phase,size1, size2, labeledMat, ...
+cosSinlinspace = accumulate(phase, size1, size2, labeledMat, ...
     cosSinlinspace, minRadius, maxRadius);
 
 
@@ -91,8 +105,6 @@ figure
 drawCirclesMat = drawCirclesMat  - ~ labeledMat;
 imshow(drawCirclesMat);
 
-
-
     function setRadiiAndMinPoints(numberOfInputArguments)
         switch numberOfInputArguments
             case 0
@@ -112,8 +124,28 @@ imshow(drawCirclesMat);
 
 
 
+ 
+    
+    function createCircleAroundEachPixel(x, y, r, rCosSin, cosSinlinspace, rphase, size1, size2)
+            blackPoints = length(y);
+            for blackPoint = 1:blackPoints
+                a = round(x(blackPoint) - r .* cosSinlinspace{1, rCosSin});
+                b = round(y(blackPoint) - r .* cosSinlinspace{2, rCosSin});
+                [a, b] = keepInBordersPixelsOnly(a, b, size1, size2);
+                addOrSubtractRadiusPhase(a, b, rphase);
+            end
 
 
+
+            function addOrSubtractRadiusPhase(a, b, rphase)
+                circlePoints = length(a);
+                for circlePoint = 1:circlePoints
+                    bcp = b(circlePoint);
+                    acp = a(circlePoint);
+                    accumulatorMat(bcp, acp) = accumulatorMat(bcp, acp) + rphase;
+                end
+            end
+    end
 
     function cosSinlinspace = accumulate(phase, size1, size2, labeledMat, cosSinlinspace, minRadius, maxRadius)
         [y, x] = findBlackPixels1(labeledMat);
@@ -124,40 +156,15 @@ imshow(drawCirclesMat);
             createCircleAroundEachPixel(x, y, r, rCosSin, cosSinlinspace, rphase, size1, size2)
         end
 
-        function [y, x] = findBlackPixels1(labeledMat)
-            [y, x] = find(labeledMat == 0);
-        end
 
-        function cosSinlinspace = fillCosSinlinspace(r, rCosSin, cosSinlinspace)
-            omega = linspace(1 / r, 2 * pi, ceil(2 * pi * r));
-            cosSinlinspace(:, rCosSin) = {cos(omega), sin(omega)};
-        end
 
-        function createCircleAroundEachPixel(x, y, r, rCosSin, cosSinlinspace, rphase, size1, size2)
-            blackPoints = length(y);
-            for blackPoint = 1:blackPoints
-                a = round(x(blackPoint) - r .* cosSinlinspace{1, rCosSin});
-                b = round(y(blackPoint) - r .* cosSinlinspace{2, rCosSin});
-                keepInBordersPixelsOnly(size1, size2)
-                addOrSubtractRadiusPhase(rphase)
-            end
-
-            function keepInBordersPixelsOnly(size1, size2)
-                log = a > 0 & a <= size2 & b > 0 & b <= size1;
-                a = a(log);
-                b = b(log);
-            end
-
-            function addOrSubtractRadiusPhase(rphase)
-                circlePoints = length(a);
-                for circlePoint = 1:circlePoints
-                    bcp = b(circlePoint);
-                    acp = a(circlePoint);
-                    accumulatorMat(bcp, acp) = accumulatorMat(bcp, acp) + rphase;
-                end
-            end
-        end
+        
     end
+
+
+
+
+
 
     function diminish(sign, size1, size2, labeledMat)
         [y, x] = findBlackPixels1(sign, labeledMat);
