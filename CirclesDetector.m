@@ -38,7 +38,10 @@ function labeledMat = centerLabelsPoints(size1, size2, labels, labeledMat)
     tempMat = ones(size1, size2);
     for label = 1:labels
         [lebeledSpace1, labeledSpace2] = find(labeledMat == label);
-        tempMat(round(mean(lebeledSpace1) - AVERAGE_HELPER):round(mean(lebeledSpace1) + AVERAGE_HELPER), round(mean(labeledSpace2) - AVERAGE_HELPER):round(mean(labeledSpace2) + AVERAGE_HELPER)) = 0;
+        tempMat(round(mean(lebeledSpace1) - AVERAGE_HELPER):round(mean( ...
+            lebeledSpace1) + AVERAGE_HELPER), round(mean(labeledSpace2) ...
+            - AVERAGE_HELPER):round(mean(labeledSpace2) + ...
+            AVERAGE_HELPER)) = 0;
     end
     labeledMat = tempMat;
 end
@@ -69,6 +72,53 @@ function [a, b] = keepInBordersPixelsOnly(a, b, size1, size2)
     b = b(log);
 end
 
+function accumulatorMat = addOrSubtractRadiusPhase( ...
+        accumulatorMat, a, b, rphase)
+    circlePoints = length(a);
+    for circlePoint = 1:circlePoints
+        bcp = b(circlePoint);
+        acp = a(circlePoint);
+        accumulatorMat(bcp, acp) = accumulatorMat( ...
+            bcp, acp) + rphase;
+    end
+end
+
+function accumulatorMat = createCircleAroundEachPixel(accumulatorMat, ...
+    x, y, r, rCosSin, cosSinlinspace, rphase, size1, size2)
+        blackPoints = length(y);
+        for blackPoint = 1:blackPoints
+            a = round(x(blackPoint) - r .* cosSinlinspace{1, rCosSin});
+            b = round(y(blackPoint) - r .* cosSinlinspace{2, rCosSin});
+            [a, b] = keepInBordersPixelsOnly(a, b, size1, size2);
+            accumulatorMat = addOrSubtractRadiusPhase(accumulatorMat, ...
+                a, b, rphase);
+        end
+
+
+
+end
+
+function [cosSinlinspace, accumulatorMat] = fillAndCreate(minRadius, ...
+    maxRadius, phase, cosSinlinspace, accumulatorMat, x, y, size1, size2)
+    for r = minRadius:maxRadius
+        rCosSin = r - minRadius + 1;
+        rphase = phase(rCosSin);
+        cosSinlinspace = fillCosSinlinspace(r, rCosSin, cosSinlinspace);
+        accumulatorMat = createCircleAroundEachPixel(accumulatorMat, x, y, r, rCosSin, cosSinlinspace, rphase, size1, size2);
+    end
+end
+
+function [cosSinlinspace, accumulatorMat] = accumulate(phase, ...
+        size1, size2, labeledMat, cosSinlinspace, minRadius, ...
+        maxRadius, accumulatorMat)
+    [y, x] = findBlackPixels1(labeledMat);
+    [cosSinlinspace, accumulatorMat] =fillAndCreate( ...
+        minRadius, maxRadius, phase, cosSinlinspace, ...
+        accumulatorMat, x, y, size1, size2);
+end
+
+
+
 function circleHoughTransform(minPoints, minRadius, maxRadius)
 
 [mat, size1, size2] = readImage('DottedCircles.png');
@@ -79,12 +129,8 @@ radiiRange = maxRadius - minRadius + 1;
 cosSinlinspace = cell(2, radiiRange);
 accumulatorMat = zeros(size1, size2);
 drawCirclesMat = ones(size1, size2);
-
-
-cosSinlinspace = accumulate(phase, size1, size2, labeledMat, ...
-    cosSinlinspace, minRadius, maxRadius);
-
-
+[cosSinlinspace, accumulatorMat] = accumulate(phase, size1, size2, labeledMat, ...
+    cosSinlinspace, minRadius, maxRadius, accumulatorMat);
 
 
 while labels > 4
@@ -126,46 +172,7 @@ imshow(drawCirclesMat);
 
  
     
-    function createCircleAroundEachPixel(x, y, r, rCosSin, cosSinlinspace, rphase, size1, size2)
-            blackPoints = length(y);
-            for blackPoint = 1:blackPoints
-                a = round(x(blackPoint) - r .* cosSinlinspace{1, rCosSin});
-                b = round(y(blackPoint) - r .* cosSinlinspace{2, rCosSin});
-                [a, b] = keepInBordersPixelsOnly(a, b, size1, size2);
-                addOrSubtractRadiusPhase(a, b, rphase);
-            end
-
-
-
-            function addOrSubtractRadiusPhase(a, b, rphase)
-                circlePoints = length(a);
-                for circlePoint = 1:circlePoints
-                    bcp = b(circlePoint);
-                    acp = a(circlePoint);
-                    accumulatorMat(bcp, acp) = accumulatorMat(bcp, acp) + rphase;
-                end
-            end
-    end
-
-    function cosSinlinspace = accumulate(phase, size1, size2, labeledMat, cosSinlinspace, minRadius, maxRadius)
-        [y, x] = findBlackPixels1(labeledMat);
-        for r = minRadius:maxRadius
-            rCosSin = r - minRadius + 1;
-            rphase = phase(rCosSin);
-            cosSinlinspace = fillCosSinlinspace(r, rCosSin, cosSinlinspace);
-            createCircleAroundEachPixel(x, y, r, rCosSin, cosSinlinspace, rphase, size1, size2)
-        end
-
-
-
-        
-    end
-
-
-
-
-
-
+  
     function diminish(sign, size1, size2, labeledMat)
         [y, x] = findBlackPixels1(sign, labeledMat);
         for r = minRadius:maxRadius
