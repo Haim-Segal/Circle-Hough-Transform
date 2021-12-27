@@ -254,6 +254,51 @@ function [localAccumulatorMat, localMinRadius, localRadiiRange, localtheta, y, x
     localAccumulatorMat = LAMat;
 end
 
+function [A, AMax] = absAccumulatorMat2(localAccumulatorMat)
+    A = abs(localAccumulatorMat);  
+    AMax = max(A(:));
+end
+
+function [x, y] = keepOnlyVicinityPixels2(x, y, max_x, max_y)
+    VICINITY_SQUARE_RADIUS = 100;
+    log = (y - max_y) .^ 2 + (x - max_x) .^ 2 < VICINITY_SQUARE_RADIUS;
+    y = y(log);
+    x = x(log);
+end
+
+function [y, x] = maxPixelVicinity2(A, MIN_FRACT_OF_MAX_PIXEL, AMax)
+    [max_y, max_x] = find(A == AMax);
+    max_y = max_y(1);
+    max_x = max_x(1);
+    [y, x] = find(A >= MIN_FRACT_OF_MAX_PIXEL * AMax);
+    [x, y] = keepOnlyVicinityPixels2(x, y, max_x, max_y);
+end
+
+function rad = extractRadiusOutOfPhase2(numberOfVicinityPixels, localAccumulatorMat, x, y, localtheta, localMinRadius)
+    sumPhase = 0;
+    for vicinityPixel = 1:numberOfVicinityPixels
+        sumPhase = sumPhase + localAccumulatorMat(y(vicinityPixel), x(vicinityPixel));
+    end
+    [~, phaseRadius] = min(abs(localtheta - angle(sumPhase)));
+    rad = phaseRadius + localMinRadius - 1;
+end
+
+function [xCen, yCen, rad] = findRadiusAndCenter2(A, AMax, localAccumulatorMat, localtheta, localMinRadius)
+    MIN_FRACT_OF_MAX_PIXEL = 0.8;
+    [y, x] = maxPixelVicinity2(A, MIN_FRACT_OF_MAX_PIXEL, AMax);
+    rad = extractRadiusOutOfPhase2(length(y), localAccumulatorMat, x, y, localtheta, localMinRadius);
+    xCen = round(mean(x));
+    yCen = round(mean(y));
+end
+
+function [rad, xCen, yCen] = absAccumulator2(localAccumulatorMat, localtheta, localMinRadius)
+        [A, AMax] = absAccumulatorMat2(localAccumulatorMat);
+        showAbsAccumulatorMat(0, A)
+        [xCen, yCen, rad] = findRadiusAndCenter2(A, AMax, localAccumulatorMat, localtheta, localMinRadius);      
+end
+
+
+
 
 
 
@@ -269,18 +314,17 @@ accumulatorMat = zeros(size1, size2);
 drawCirclesMat = ones(size1, size2);
 [cosSinlinspace, accumulatorMat] = accumulate(phase, size1, size2, ...
     labeledMat, cosSinlinspace, minRadius, maxRadius, accumulatorMat);
-
-
 while labels > 4
     [rad, xCen, yCen] = absAccumulator1(accumulatorMat, theta, minRadius);
     relevantAreaMat = relevantArea1(rad, cosSinlinspace, xCen, yCen, minRadius, 10, ...
         size1, size2);
     [localAccumulatorMat, localMinRadius, radiiRangeLocal, localtheta, localX, localY] = localAccumulator( ...
         rad, minRadius, maxRadius, size1, size2, labeledMat, relevantAreaMat, cosSinlinspace);
-    
-    [~, xCen, yCen] = absAccumulator2(localAccumulatorMat);
+    [~, xCen, yCen] = absAccumulator2(localAccumulatorMat, localtheta, localMinRadius);
     
     [rad, xCen, yCen, maxVotes] = SetRadiusAndCenter(1, xCen, yCen, radiiRangeLocal, localMinRadius);
+
+    
     if maxVotes < minPoints
         break;
     end
@@ -360,57 +404,7 @@ imshow(drawCirclesMat);
         end
     end
 
-    function [rad, xCen, yCen] = absAccumulator2(localAccumulatorMat)
-        [A, AMax] = absAccumulatorMat2(localAccumulatorMat);
-        showAbsAccumulatorMat(0, A)
-        findRadiusAndCenter1(nargin, AMax)
-
-        function [A, AMax] = absAccumulatorMat2(localAccumulatorMat)
-            A = abs(localAccumulatorMat);  
-            AMax = max(A(:));
-        end
-
-        function findRadiusAndCenter1(numberOfInputArguments, AMax)
-            MIN_FRACT_OF_MAX_PIXEL = 0.8;
-            [y, x] = maxPixelVicinity(MIN_FRACT_OF_MAX_PIXEL, AMax);
-            extractRadiusOutOfPhase(numberOfInputArguments, length(y));
-            xCen = round(mean(x));
-            yCen = round(mean(y));
-
-            function [y, x] = maxPixelVicinity(MIN_FRACT_OF_MAX_PIXEL, AMax)
-                [max_y, max_x] = find(A == AMax);
-                max_y = max_y(1);
-                max_x = max_x(1);
-                [y, x] = find(A >= MIN_FRACT_OF_MAX_PIXEL * AMax);
-                keepOnlyVicinityPixels()
-
-                function keepOnlyVicinityPixels()
-                    VICINITY_SQUARE_RADIUS = 100;
-                    log = (y - max_y) .^ 2 + (x - max_x) .^ 2 < VICINITY_SQUARE_RADIUS;
-                    y = y(log);
-                    x = x(log);
-                end
-            end
-
-            function extractRadiusOutOfPhase(numberOfInputArguments, numberOfVicinityPixels)
-                sumPhase = 0;
-                if numberOfInputArguments == 0
-                    for vicinityPixel = 1:numberOfVicinityPixels
-                        sumPhase=sumPhase + accumulatorMat(y(vicinityPixel), x(vicinityPixel));
-                    end
-                    [~, phaseRadius] = min(abs(theta - angle(sumPhase)));
-                    rad = phaseRadius + minRadius - 1;
-                else
-                    for vicinityPixel = 1:numberOfVicinityPixels
-                        sumPhase = sumPhase + localAccumulatorMat(y(vicinityPixel), x(vicinityPixel));
-                    end
-                    [~, phaseRadius] = min(abs(localtheta - angle(sumPhase)));
-                    rad = phaseRadius + localMinRadius - 1;
-                end
-            end
-        end
-    end
-
+    
     function relevantAreaMat = relevantArea(rad, xCen, yCen, minRadius, width, size1, size2)
         x = round(rad .* cosSinlinspace{1, rad - minRadius + 1} + xCen);
         y = round(rad .* cosSinlinspace{2, rad - minRadius + 1} + yCen);
