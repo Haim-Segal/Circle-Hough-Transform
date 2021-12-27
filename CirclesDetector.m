@@ -287,13 +287,15 @@ function [relevantAreaMat, drawCirclesMat] = relevantAreaAndDrawCircle(rad, xCen
     [drawCirclesMat, relevantAreaMat] = markRelevatAreaAndDrawCircle(length(x), width, size1, size2, x, y, drawCirclesMat);
 end
 
-function accumulatorMat = diminish(size1, size2, labeledMat, minRadius, maxRadius, phase, relevantAreaMat, cosSinlinspace, accumulatorMat)
+function accumulatorMat = diminish(phase, size1, ...
+    size2, labeledMat, relevantAreaMat, cosSinlinspace, minRadius, maxRadius, ...
+    accumulatorMat, sign)
     [y, x] = findRelevantBlackPixels(labeledMat, relevantAreaMat);
     for r = minRadius:maxRadius
         rCosSin = r - minRadius + 1;
         rphase = phase(rCosSin);
         accumulatorMat = createCircleAroundEachPixel(r, rCosSin, ...
-            rphase, size1, size2, x, y, cosSinlinspace, accumulatorMat, -1);
+            rphase, size1, size2, x, y, cosSinlinspace, accumulatorMat, sign);
     end
 end
 
@@ -321,7 +323,8 @@ function circleHoughTransform(minPoints, minRadius, maxRadius)
         end
         [relevantAreaMat, drawCirclesMat]  = relevantAreaAndDrawCircle(rad, xCen, yCen, minRadius, 2, size1, size2, cosSinlinspace, drawCirclesMat);
         
-        accumulatorMat = diminish(size1, size2, labeledMat, minRadius, maxRadius, phase, relevantAreaMat, cosSinlinspace, accumulatorMat);
+        accumulatorMat = diminish(phase, size1, size2, ...
+        labeledMat, relevantAreaMat, cosSinlinspace, minRadius, maxRadius, accumulatorMat, -1);
         labeledMat(logical(relevantAreaMat)) = 1;
         [~, labels] = bwlabel(~ labeledMat, 4);
     end
