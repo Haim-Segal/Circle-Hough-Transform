@@ -21,7 +21,7 @@ function mat = whitePerimeter(mat, size1, size2)
     mat([1:2, size1 - 1:size1], [1:2, size2 - 1:size2]) = 1;
 end
 
-function [mat, size1, size2] = removeWhiteBordersAndGetSizes(mat)
+function [mat, size1, size2] = removeWhiteBordersAndGetSize(mat)
     mat = removeWhiteBorders(mat);
     [size1, size2] = size(mat);
     mat = whitePerimeter(mat, size1, size2);
@@ -29,7 +29,7 @@ end
 
 function [mat, size1, size2] = readImageToMatrix(imgPath)
     binaryMat = imgToBinaryMat(imgPath);
-    [mat, size1, size2] = removeWhiteBordersAndGetSizes(binaryMat);
+    [mat, size1, size2] = removeWhiteBordersAndGetSize(binaryMat);
 end
 
 function labeledMat = centerLabelsPoints(size1, size2, labels, labeledMat)
@@ -49,6 +49,11 @@ function [labeledMat, labels] = connectedSpaces(mat, size1, size2)
     CONNECTIVITY = 4;
     [labeledMat, labels] = bwlabel(~ mat, CONNECTIVITY);
     labeledMat = centerLabelsPoints(size1, size2, labels, labeledMat);
+end
+
+function [minRadius, maxRadius] = RadiiRangeDef(size1, size2)
+    minRadius = floor(min(size1, size2) / 8) - 1;
+    maxRadius = ceil(min(size1, size2) / 4) + 1;
 end
 
 function [theta, phase] = matchPhaseToEachRadius(radiiRange)
@@ -72,7 +77,7 @@ function [a, b] = keepInBordersPixelsOnly(a, b, size1, size2)
 end
 
 function accumulatorMat = addOrSubtractRadiusPhase( ...
-        sign, accumulatorMat, a, b, rphase)
+    sign, accumulatorMat, a, b, rphase)
     circlePoints = length(a);
     for circlePoint = 1:circlePoints
         bcp = b(circlePoint);
@@ -83,34 +88,36 @@ end
 
 function accumulatorMat = createCircleAroundEachPixel(r, rCosSin, ...
     rphase, size1, size2, x, y, cosSinlinspace, accumulatorMat, sign)
-        blackPoints = length(y);
-        for blackPoint = 1:blackPoints
-            a = round(x(blackPoint) - r .* cosSinlinspace{1, rCosSin});
-            b = round(y(blackPoint) - r .* cosSinlinspace{2, rCosSin});
-            [a, b] = keepInBordersPixelsOnly(a, b, size1, size2);
-            accumulatorMat = addOrSubtractRadiusPhase(sign, accumulatorMat, ...
-                a, b, rphase);
-        end
+    blackPoints = length(y);
+    for blackPoint = 1:blackPoints
+        a = round(x(blackPoint) - r .* cosSinlinspace{1, rCosSin});
+        b = round(y(blackPoint) - r .* cosSinlinspace{2, rCosSin});
+        [a, b] = keepInBordersPixelsOnly(a, b, size1, size2);
+        accumulatorMat = addOrSubtractRadiusPhase(sign, accumulatorMat, ...
+            a, b, rphase);
+    end
 end
 
 function [cosSinlinspace, accumulatorMat] = fillAndCreate(minRadius, ...
-    maxRadius, phase, cosSinlinspace, accumulatorMat, x, y, size1, size2)
+    maxRadius, phase, cosSinlinspace, accumulatorMat, x, y, size1, size2, sign, fill)
     for r = minRadius:maxRadius
         rCosSin = r - minRadius + 1;
+        if fill
+            cosSinlinspace = fillCosSinlinspace(r, rCosSin, cosSinlinspace);
+        end
         rphase = phase(rCosSin);
-        cosSinlinspace = fillCosSinlinspace(r, rCosSin, cosSinlinspace);
         accumulatorMat = createCircleAroundEachPixel(r, rCosSin, ...
-    rphase, size1, size2, x, y, cosSinlinspace, accumulatorMat, 1);
+            rphase, size1, size2, x, y, cosSinlinspace, accumulatorMat, sign);
     end
 end
 
 function [cosSinlinspace, accumulatorMat] = accumulate(phase, size1, ...
     size2, labeledMat, cosSinlinspace, minRadius, maxRadius, ...
-    accumulatorMat)
+    accumulatorMat, sign, fill)
     [y, x] = findBlackPixels1(labeledMat);
     [cosSinlinspace, accumulatorMat] = fillAndCreate(minRadius, ...
         maxRadius, phase, cosSinlinspace,accumulatorMat, x, y, size1, ...
-        size2);
+        size2, sign, fill);
 end
 
 function [A, AMax] = absAccumulatorMat(mat)
@@ -269,22 +276,22 @@ function [radius, xCenter, yCenter, maxVotes] = SetRadiusAndCenter(STEP, xCen, y
     [yCenter, xCenter, radius, maxVotes] = findRadiusAndCenter3(STEP, xCen, yCen, localMinRadius, centerAndRadius);
 end
 
-function [drawCirclesMat, relevantAreaMat] = markRelevatAreaAndDrawCircle(xLength, width, size1, size2, x, y, drawCirclesMat)
+function [foundCirclesMat, relevantAreaMat] = markRelevatAreaAndDrawCircle(xLength, width, size1, size2, x, y, foundCirclesMat)
     RA = zeros(size1, size2);
     for t = 1:xLength
         xt = x(t);
         yt = y(t);
         RA(yt - min(yt - 1,width):yt + min(size1 - yt, width), xt - min(xt - 1, width):xt + min(size2 - xt, width)) = 1;
         if width == 2
-            drawCirclesMat(yt, xt) = 0;
+            foundCirclesMat(yt, xt) = 0;
         end
     end
     relevantAreaMat = RA;
 end
 
-function [relevantAreaMat, drawCirclesMat] = relevantAreaAndDrawCircle(rad, xCen, yCen, minRadius, width, size1, size2, cosSinlinspace, drawCirclesMat)
+function [relevantAreaMat, foundCirclesMat] = relevantAreaAndDrawCircle(rad, xCen, yCen, minRadius, width, size1, size2, cosSinlinspace, foundCirclesMat)
     [x, y] = relevantPointsMat(rad, cosSinlinspace, xCen, yCen, minRadius, size1, size2);
-    [drawCirclesMat, relevantAreaMat] = markRelevatAreaAndDrawCircle(length(x), width, size1, size2, x, y, drawCirclesMat);
+    [foundCirclesMat, relevantAreaMat] = markRelevatAreaAndDrawCircle(length(x), width, size1, size2, x, y, foundCirclesMat);
 end
 
 function accumulatorMat = diminish(phase, size1, ...
@@ -302,15 +309,15 @@ end
 function circleHoughTransform(minPoints, minRadius, maxRadius)
     [mat, size1, size2] = readImageToMatrix('DottedCircles.png');
     [labeledMat, labels] = connectedSpaces(mat, size1, size2);
-    setRadiiAndMinPoints(nargin);
+    setRadiiAndMinPoints(nargin, size1, size2);
     radiiRange = maxRadius - minRadius + 1;
     [theta, phase] = matchPhaseToEachRadius(radiiRange);
     cosSinlinspace = cell(2, radiiRange);
     accumulatorMat = zeros(size1, size2);
-    drawCirclesMat = ones(size1, size2);
+    foundCirclesMat = ones(size1, size2);
     [cosSinlinspace, accumulatorMat] = accumulate(phase, size1, size2, ...
-        labeledMat, cosSinlinspace, minRadius, maxRadius, accumulatorMat);
-    while labels > 4
+        labeledMat, cosSinlinspace, minRadius, maxRadius, accumulatorMat, 1, true);
+    while labels > minPoints
         [rad, xCen, yCen] = absAccumulator(accumulatorMat, theta, minRadius);
         relevantAreaMat = relevantArea(rad, cosSinlinspace, xCen, yCen, minRadius, 10, ...
             size1, size2);
@@ -321,7 +328,7 @@ function circleHoughTransform(minPoints, minRadius, maxRadius)
         if maxVotes < minPoints
             break;
         end
-        [relevantAreaMat, drawCirclesMat]  = relevantAreaAndDrawCircle(rad, xCen, yCen, minRadius, 2, size1, size2, cosSinlinspace, drawCirclesMat);
+        [relevantAreaMat, foundCirclesMat]  = relevantAreaAndDrawCircle(rad, xCen, yCen, minRadius, 2, size1, size2, cosSinlinspace, foundCirclesMat);
         
         accumulatorMat = diminish(phase, size1, size2, ...
         labeledMat, relevantAreaMat, cosSinlinspace, minRadius, maxRadius, accumulatorMat, -1);
@@ -329,21 +336,16 @@ function circleHoughTransform(minPoints, minRadius, maxRadius)
         [~, labels] = bwlabel(~ labeledMat, 4);
     end
     figure
-    drawCirclesMat = drawCirclesMat  - ~ labeledMat;
-    imshow(drawCirclesMat);
+    foundCirclesMat = foundCirclesMat  - ~ labeledMat;
+    imshow(foundCirclesMat);
 
-        function setRadiiAndMinPoints(numberOfInputArguments)
+        function setRadiiAndMinPoints(numberOfInputArguments, size1, size2)
         switch numberOfInputArguments
             case 0
                 minPoints = 3;
-                RadiiDef();
+                [minRadius, maxRadius] = RadiiRangeDef(size1, size2);
             case 1
-                RadiiDef();
-        end
- 
-        function RadiiDef()
-            minRadius = floor(size1 / 8) - 1;
-            maxRadius = ceil(size1 / 4) + 1;
+                [minRadius, maxRadius] = RadiiRangeDef(size1, size2);
         end
     end
 end
