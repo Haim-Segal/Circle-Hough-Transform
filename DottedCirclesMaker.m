@@ -1,5 +1,5 @@
 close all;clear,clc
-DottedCircles()
+DottedCircles(2)
 
 function DottedCircles(circles,noise,MinPoints)
 
