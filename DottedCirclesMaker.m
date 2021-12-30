@@ -1,6 +1,6 @@
 clear, clc, close all
 tic
-dottedCircles(9)
+dottedCircles(2)
 toc
 
 

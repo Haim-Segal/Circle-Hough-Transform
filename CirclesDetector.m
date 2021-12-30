@@ -210,11 +210,11 @@ function relAreaMat = relevantArea(rad, cosSinlinspace, xCen, yCen, minRad, widt
     relAreaMat = markRelevatArea(x, y, length(x), width, size1, size2);
 end
 
-function [localminRad, localmaxRad, localRadiiRange] = setLocalRadii(rad, minRad, maxRad)
+function [localMinRad, localmaxRad, localRadiiRange] = setLocalRadii(rad, minRad, maxRad)
     RANGE_HELPER = 10;
-    localminRad = max(rad - RANGE_HELPER, minRad);
+    localMinRad = max(rad - RANGE_HELPER, minRad);
     localmaxRad = min(rad + RANGE_HELPER, maxRad);
-    localRadiiRange = localmaxRad - localminRad + 1;
+    localRadiiRange = localmaxRad - localMinRad + 1;
 end
 
 function [localtheta, localphase] = setLocalPhaseCoding(localRadiiRange)
@@ -222,21 +222,21 @@ function [localtheta, localphase] = setLocalPhaseCoding(localRadiiRange)
     localphase = complex(cos(localtheta), sin(localtheta));
 end
 
-function [localAccumulatorMat, localminRad, localRadiiRange, localtheta, y, x] = localAccumulator( ...
+function [localAccumulatorMat, localMinRad, localRadiiRange, localtheta, y, x] = localAccumulator( ...
         rad, minRad, maxRad, size1, size2, labeledMat, relAreaMat, cosSinlinspace)
     [y, x] = findRelevantBlackPixels(labeledMat, relAreaMat);
-    [localminRad, localmaxRad, localRadiiRange] = setLocalRadii( ...
+    [localMinRad, localmaxRad, localRadiiRange] = setLocalRadii( ...
         rad, minRad, maxRad);
     [localtheta , localphase] = setLocalPhaseCoding(localRadiiRange);
-    [~, localAccumulatorMat] = fillAndCreate(localminRad, ...
+    [~, localAccumulatorMat] = fillAndCreate(localMinRad, ...
         localmaxRad, localphase, cosSinlinspace, zeros(size1, size2), x, y, size1, ...
         size2, 1, false);
 end
 
-function RadAcc = RadiusAccumulate(bp, a, b,localminRad, radiiRangeLocal, RadAcc, localY, localX)
-    ar = round(dist([localY(bp), localX(bp)], [a;b])) - localminRad + 1;
-    if ar > 0 && ar <= radiiRangeLocal
-        RadAcc(ar) = RadAcc(ar) + 1 ;
+function RadAcc = RadiusAccumulate(bp, a, b,localMinRad, radiiRangeLocal, RadAcc, localY, localX)
+    tempRad = round(dist([localY(bp), localX(bp)], [a;b])) - localMinRad + 1;
+    if tempRad > 0 && tempRad <= radiiRangeLocal
+        RadAcc(tempRad) = RadAcc(tempRad) + 1 ;
     end
 end
 
@@ -247,40 +247,40 @@ function cenAndRad = AssignRadiusAndVotes(STEP, xCen, yCen, a, b, mat, cenAndRad
     cenAndRad(b - yCen + STEP + 1, a - xCen + STEP + 1) = complex(maxRad, maxMat);
 end
 
-function cenAndRad = findCenterAndRadiusCandidates(xCen, yCen, STEP, radiiRangeLocal, blackPoints, localminRad, cenAndRad, localY, localX)
+function cenAndRad = findCenterAndRadiusCandidates(xCen, yCen, STEP, radiiRangeLocal, blackPoints, localMinRad, cenAndRad, localY, localX)
     for a = xCen - STEP:xCen + STEP
         for b = yCen - STEP:yCen + STEP
             RadiusAccumulator = zeros(1, radiiRangeLocal);
             for blackPoint = 1:blackPoints
-                RadiusAccumulator = RadiusAccumulate(blackPoint, a, b, localminRad, radiiRangeLocal, RadiusAccumulator, localY, localX);
+                RadiusAccumulator = RadiusAccumulate(blackPoint, a, b, localMinRad, radiiRangeLocal, RadiusAccumulator, localY, localX);
             end
             cenAndRad = AssignRadiusAndVotes(STEP, xCen, yCen, a, b, RadiusAccumulator, cenAndRad);
         end
     end
 end
 
-function [yCen, xCen, rad] = etractRadiusAndCenterOutOfCR(STEP, xCen, yCen, localminRad, maxVotes, realCR, imagCR)
-    RCR = round(mean(realCR(imagCR == maxVotes)));
+function [yCen, xCen, rad] = etractRadiusAndCenterOutOfCR(STEP, xCen, yCen, localMinRad, maxVotes, realCR, imagCR)
+    CRRad = round(mean(realCR(imagCR == maxVotes)));
     [i, j] = find(imagCR == maxVotes);
-    bCR = round(mean(i));
-    aCR = round(mean(j));
-    yCen = yCen + bCR - STEP - 1;
-    xCen = xCen + aCR - STEP - 1;
-    rad = RCR + localminRad - 1;
+    CRb = round(mean(i));
+    CRa = round(mean(j));
+    yCen = yCen + CRb - STEP - 1;
+    xCen = xCen + CRa - STEP - 1;
+    rad = CRRad + localMinRad - 1;
 end
 
-function [yCen, xCen, rad, maxVotes] = findRadiusAndCenter3(STEP, xCen, yCen, localminRad, cenAndRad)
+function [yCen, xCen, rad, maxVotes] = findCenterAndRadius(STEP, xCen, yCen, localMinRad, cenAndRad)
     realCR = real(cenAndRad );
     imagCR = imag(cenAndRad );
     maxVotes = max(imagCR(:));
-    [yCen, xCen, rad] = etractRadiusAndCenterOutOfCR(STEP, xCen, yCen, localminRad, maxVotes, realCR, imagCR);
+    [yCen, xCen, rad] = etractRadiusAndCenterOutOfCR(STEP, xCen, yCen, localMinRad, maxVotes, realCR, imagCR);
 end
 
-function [rad, xCen, yCen, maxVotes] = SetRadiusAndCenter(STEP, xCen, yCen, radiiRangeLocal, localminRad, localY, localX)
+function [rad, xCen, yCen, maxVotes] = SetRadiusAndCenter(STEP, xCen, yCen, radiiRangeLocal, localMinRad, localY, localX)
     cenAndRad  = zeros(2 * STEP + 1);
     blackPoints = length(localX);
-    cenAndRad = findCenterAndRadiusCandidates(xCen, yCen, STEP, radiiRangeLocal, blackPoints, localminRad, cenAndRad, localY, localX);
-    [yCen, xCen, rad, maxVotes] = findRadiusAndCenter3(STEP, xCen, yCen, localminRad, cenAndRad);
+    cenAndRad = findCenterAndRadiusCandidates(xCen, yCen, STEP, radiiRangeLocal, blackPoints, localMinRad, cenAndRad, localY, localX);
+    [yCen, xCen, rad, maxVotes] = findCenterAndRadius(STEP, xCen, yCen, localMinRad, cenAndRad);
 end
 
 function [foundCirclesMat, relAreaMat] = markRelevatAreaAndDrawCircle(xLength, width, size1, size2, x, y, foundCirclesMat)
@@ -316,13 +316,13 @@ function circleHoughTransform(minPoints, minRad, maxRad)
         [rad, xCen, yCen] = absAccumulator(accMat, theta, minRad);
         relAreaMat = relevantArea(rad, cosSinlinspace, xCen, yCen, minRad, 10, ...
             size1, size2);
-        [localAccumulatorMat, localminRad, radiiRangeLocal, localtheta, localX, localY] = localAccumulator( ...
+        [localAccumulatorMat, localMinRad, radiiRangeLocal, localtheta, localX, localY] = localAccumulator( ...
             rad, minRad, maxRad, size1, size2, labeledMat, relAreaMat, ...
             cosSinlinspace);
         [~, xCen, yCen] = absAccumulator(localAccumulatorMat, ...
-            localtheta, localminRad);
+            localtheta, localMinRad);
         [rad, xCen, yCen, maxVotes] = SetRadiusAndCenter(1, xCen, yCen, ...
-            radiiRangeLocal, localminRad, localY, localX);
+            radiiRangeLocal, localMinRad, localY, localX);
         if maxVotes < minPoints
             break;
         end
