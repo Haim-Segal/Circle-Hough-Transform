@@ -13,10 +13,10 @@ function [radii, xCen, yCen, pointsSize] = setRadiiAndCenters( ...
     pointsSize = rand(numOfcircles, 1) * 2 + 1;
 end
 
-function [xNoise, yNoise, markerSizeNoise] = setNoise(numOfNoisePoints, scaleConst)
+function [xNoise, yNoise, noiseSize] = setNoise(numOfNoisePoints, scaleConst)
     xNoise = randi((scaleConst - 2) * [- 1, 1], 1, numOfNoisePoints);
     yNoise = randi((scaleConst - 2) * [- 1, 1], 1, numOfNoisePoints);
-    markerSizeNoise = rand * 2 + 1;
+    noiseSize = rand * 2 + 1;
 end
 
 function plotCorners(scaleConst)
@@ -29,9 +29,9 @@ end
 
 function outBordersPoints = rotateOutBordersPoints(rotMat, x, y, ...
         xCen, yCen, outBordersPoints, circle, SCALE_CONST)
-    z = rotMat * [x(outBordersPoints) - xCen(circle); y(outBordersPoints) - yCen(circle)];
-    x(outBordersPoints) = z(1, :) + xCen(circle);
-    y(outBordersPoints) = z(2, :) + yCen(circle);
+    rotatedPoints = rotMat * [x(outBordersPoints) - xCen(circle); y(outBordersPoints) - yCen(circle)];
+    x(outBordersPoints) = rotatedPoints(1, :) + xCen(circle);
+    y(outBordersPoints) = rotatedPoints(2, :) + yCen(circle);
     outBordersPoints = find(abs(x) > SCALE_CONST | abs(y) > SCALE_CONST);
 end
 
@@ -44,49 +44,29 @@ function [x, y] = KeepInBordersPointsOnly(SCALE_CONST, minPoints, x, y, ...
             xCen, yCen, outBordersPoints, circle, SCALE_CONST);
         end
     end
-    
     x(outBordersPoints) = [];
     y(outBordersPoints) = [];
 end
 
-function plotAndSaveDottedCircels(SCALE_CONST, minPoints, radii, xCen, yCen, ...
-    pointsSize, numOfcircles, scaleConst, xNoise, yNoise, noisePointsSize)
-    plotCorners(scaleConst)
-    for circle = 1:numOfcircles
-        t = rand(1, randi([minPoints minPoints + 10])) * 2 * pi;
-        x = radii(circle) .* cos(t) + xCen(circle);
-        y = radii(circle) .* sin(t) + yCen(circle);
-        [x,y] = KeepInBordersPointsOnly(SCALE_CONST, minPoints, x, y, ...
-            xCen, yCen, circle);
-        plot(x, y, '.k', "MarkerSize", pointsSize(circle))
-    end
-    plot(xNoise, yNoise, '.k', "MarkerSize", noisePointsSize)
-    saveas(gcf, 'DottedCircles.png')
-end
-
-function plotAndSaveWholeCircles(pointsSize, radii, xCen, yCen, minPoints, numOfcircles, SCALE_CONST, xNoise, yNoise, noisePointsSize)
+function plotAndSaveCircles(whole ,imgName, pointsSize, radii, xCen, yCen, minPoints, numOfcircles, SCALE_CONST, xNoise, yNoise, noisePointsSize)
     plotCorners(SCALE_CONST)
     for circle = 1:numOfcircles
-        t = linspace(1 / radii(circle), 2 * pi, 2 * pi * radii(circle));
-        x = radii(circle) .* cos(t) + xCen(circle);
-        y = radii(circle) .* sin(t) + yCen(circle);
+        if whole
+            theta = linspace(1 / radii(circle), 2 * pi, 2 * pi * radii(circle));
+        else
+            theta = rand(1, randi([minPoints minPoints + 10])) * 2 * pi;
+        end
+        x = radii(circle) .* cos(theta) + xCen(circle);
+        y = radii(circle) .* sin(theta) + yCen(circle);
         [x, y] = KeepInBordersPointsOnly(SCALE_CONST, minPoints, x, y, ...
             xCen, yCen, circle);
         plot(x, y, '.k', "MarkerSize", pointsSize(circle))
     end
     plot(xNoise, yNoise, '.k', "MarkerSize", noisePointsSize)
-    saveas(gcf, 'WholeCircles.png')
-    close all
+    saveas(gcf, imgName)
 end
 
-function imageShow(imageName)
-    figure
-    image = imbinarize(im2gray(imread([imageName,'.png'])));
-    image = removeBorders(image);
-    imshow(image)
-end
-
-function mat = removeBorders(mat)
+function mat = removeWhiteBorders(mat)
     for side = 1:4
         while all(mat(:, 1))
             mat(:, 1) = [];
@@ -96,13 +76,21 @@ function mat = removeBorders(mat)
     mat([1:2, end - 1:end], [1:2, end - 1:end]) = 1;
 end
 
+function imageShow(imageName)
+    figure
+    image = imbinarize(im2gray(imread([imageName,'.png'])));
+    image = removeWhiteBorders(image);
+    imshow(image)
+end
+
 function dottedCircles(numOfcircles, numOfNoisePoints, minPoints)
 setInputArg(nargin);
 SCALE_CONST = 200;
 [radii, xCen, yCen, pointsSize] = setRadiiAndCenters(numOfcircles, SCALE_CONST);
 [xNoise, yNoise, noisePointsSize] = setNoise(numOfNoisePoints, SCALE_CONST);
-plotAndSaveDottedCircels(SCALE_CONST, minPoints, radii, xCen, yCen, pointsSize, numOfcircles, SCALE_CONST, xNoise, yNoise, noisePointsSize)
-plotAndSaveWholeCircles(pointsSize, radii, xCen, yCen, minPoints, numOfcircles, SCALE_CONST, xNoise, yNoise, noisePointsSize)
+plotAndSaveCircles(false, 'DottedCircles.png', pointsSize, radii, xCen, yCen, minPoints, numOfcircles, SCALE_CONST, xNoise, yNoise, noisePointsSize)
+plotAndSaveCircles(true, 'WholeCircles.png', pointsSize, radii, xCen, yCen, minPoints, numOfcircles, SCALE_CONST, xNoise, yNoise, noisePointsSize)
+close all
 imageShow('DottedCircles')
 imageShow('WholeCircles')
 
