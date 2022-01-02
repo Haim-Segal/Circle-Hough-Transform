@@ -1,19 +1,20 @@
 clear, clc, close all
 tic
-dottedCircles(2)
+dottedCircles()
 toc
 
 
 
 function [radii, xCen, yCen, pointsSize] = setRadiiAndCenters( ...
-        numOfcircles, scaleConst)
-    radii = randi(round(scaleConst * [0.25, 0.5]), numOfcircles, 1);
-    xCen = randi((scaleConst - 20) * [- 1, 1], numOfcircles, 1);
-    yCen = randi((scaleConst - 20) * [- 1, 1], numOfcircles, 1);
-    pointsSize = rand(numOfcircles, 1) * 2 + 1;
+        numOfCircles, scaleConst)
+    radii = randi(round(scaleConst * [0.25, 0.5]), numOfCircles);
+    xCen = randi((scaleConst - 20) * [- 1, 1], numOfCircles);
+    yCen = randi((scaleConst - 20) * [- 1, 1], numOfCircles);
+    pointsSize = rand(numOfCircles, 1) * 2 + 1;
 end
 
-function [xNoise, yNoise, noiseSize] = setNoise(numOfNoisePoints, scaleConst)
+function [xNoise, yNoise, noiseSize] = setNoise( ...
+        numOfNoisePoints, scaleConst)
     xNoise = randi((scaleConst - 2) * [- 1, 1], 1, numOfNoisePoints);
     yNoise = randi((scaleConst - 2) * [- 1, 1], 1, numOfNoisePoints);
     noiseSize = rand * 2 + 1;
@@ -27,39 +28,43 @@ function plotCorners(scaleConst)
     axis equal off
 end
 
-function outBordersPoints = rotateOutBordersPoints(rotMat, x, y, ...
-        xCen, yCen, outBordersPoints, circle, SCALE_CONST)
-    rotatedPoints = rotMat * [x(outBordersPoints) - xCen(circle); y(outBordersPoints) - yCen(circle)];
-    x(outBordersPoints) = rotatedPoints(1, :) + xCen(circle);
-    y(outBordersPoints) = rotatedPoints(2, :) + yCen(circle);
-    outBordersPoints = find(abs(x) > SCALE_CONST | abs(y) > SCALE_CONST);
+function outsideBordersPoints = rotateOutsideBordersPoints( ...
+        rotMat, x, y, xCen, yCen, outsideBordersPoints, circle, SCALE_CONST)
+    rotatedPoints = rotMat * [x(outsideBordersPoints) - xCen(circle);
+                                y(outsideBordersPoints) - yCen(circle)];
+    x(outsideBordersPoints) = rotatedPoints(1, :) + xCen(circle);
+    y(outsideBordersPoints) = rotatedPoints(2, :) + yCen(circle);
+    outsideBordersPoints = find( ...
+        abs(x) > SCALE_CONST | abs(y) > SCALE_CONST);
 end
 
-function [x, y] = KeepInBordersPointsOnly(SCALE_CONST, minPoints, x, y, ...
-            xCen, yCen, circle)
-    outBordersPoints = find(abs(x) > SCALE_CONST | abs(y) > SCALE_CONST);
-    if nargin == 3
-        while length(x) - length(outBordersPoints) < minPoints
-            outBordersPoints = rotateOutBordersPoints([0, - 1; 1, 0], x, y, ...
-            xCen, yCen, outBordersPoints, circle, SCALE_CONST);
+function [x, y] = KeepInsideBordersPointsOnly(wholeCircle, SCALE_CONST, minPoints, ...
+        x, y, xCen, yCen, circle)
+    outsideBordersPoints = find(abs(x) > SCALE_CONST | abs(y) > SCALE_CONST);
+    if wholeCircle
+        while length(x) - length(outsideBordersPoints) < minPoints
+            outsideBordersPoints = rotateOutsideBordersPoints( ...
+                [0, - 1; 1, 0], x, y,xCen, yCen, outsideBordersPoints, ...
+                circle, SCALE_CONST);
         end
     end
-    x(outBordersPoints) = [];
-    y(outBordersPoints) = [];
+    x(outsideBordersPoints) = [];
+    y(outsideBordersPoints) = [];
 end
 
-function plotAndSaveCircles(whole ,imgName, pointsSize, radii, xCen, yCen, minPoints, numOfcircles, SCALE_CONST, xNoise, yNoise, noisePointsSize)
+function plotAndSaveCircles(wholeCircle ,imgName, pointsSize, radii, ...
+        xCen, yCen, minPoints, numOfCircles, SCALE_CONST, xNoise, yNoise, noisePointsSize)
     plotCorners(SCALE_CONST)
-    for circle = 1:numOfcircles
-        if whole
+    for circle = 1:numOfCircles
+        if wholeCircle
             theta = linspace(1 / radii(circle), 2 * pi, 2 * pi * radii(circle));
         else
             theta = rand(1, randi([minPoints minPoints + 10])) * 2 * pi;
         end
         x = radii(circle) .* cos(theta) + xCen(circle);
         y = radii(circle) .* sin(theta) + yCen(circle);
-        [x, y] = KeepInBordersPointsOnly(SCALE_CONST, minPoints, x, y, ...
-            xCen, yCen, circle);
+        [x, y] = KeepInsideBordersPointsOnly(wholeCircle, SCALE_CONST, ...
+            minPoints, x, y, xCen, yCen, circle);
         plot(x, y, '.k', "MarkerSize", pointsSize(circle))
     end
     plot(xNoise, yNoise, '.k', "MarkerSize", noisePointsSize)
@@ -83,28 +88,35 @@ function imageShow(imageName)
     imshow(image)
 end
 
-function dottedCircles(numOfcircles, numOfNoisePoints, minPoints)
-setInputArg(nargin);
-SCALE_CONST = 200;
-[radii, xCen, yCen, pointsSize] = setRadiiAndCenters(numOfcircles, SCALE_CONST);
-[xNoise, yNoise, noisePointsSize] = setNoise(numOfNoisePoints, SCALE_CONST);
-plotAndSaveCircles(false, 'DottedCircles.png', pointsSize, radii, xCen, yCen, minPoints, numOfcircles, SCALE_CONST, xNoise, yNoise, noisePointsSize)
-plotAndSaveCircles(true, 'WholeCircles.png', pointsSize, radii, xCen, yCen, minPoints, numOfcircles, SCALE_CONST, xNoise, yNoise, noisePointsSize)
-close all
-imageShow('DottedCircles')
-imageShow('WholeCircles')
+function dottedCircles(numOfCircles, numOfNoisePoints, minPoints, SCALE_CONST)
 
     function setInputArg(numOfInputArguments)
-        switch numOfInputArguments
-            case 0
-                numOfcircles = randi([3 10]);
-                numOfNoisePoints = 0;
+        if numOfInputArguments < 4
+            SCALE_CONST = 200;
+            if numOfInputArguments < 3
                 minPoints = 30;
-            case 1
-                numOfNoisePoints = 0;
-                minPoints = 30;
-            case 2
-                minPoints = max(30, round(3 * sqrt(numOfNoisePoints)));
+                if numOfInputArguments < 2
+                    numOfNoisePoints = 0;
+                    if numOfInputArguments < 1
+                        numOfCircles = randi([3 10]);
+                    end
+                end
+            end
         end
     end
+        
+    setInputArg(nargin);
+    [radii, xCen, yCen, pointsSize] = setRadiiAndCenters( ...
+        numOfCircles, SCALE_CONST);
+    [xNoise, yNoise, noisePointsSize] = setNoise( ...
+        numOfNoisePoints, SCALE_CONST);
+    plotAndSaveCircles(false, 'DottedCircles.png', pointsSize, radii, ...
+        xCen, yCen, minPoints, numOfCircles, SCALE_CONST, xNoise, ...
+        yNoise, noisePointsSize)
+    plotAndSaveCircles(true, 'WholeCircles.png', pointsSize, radii, ...
+        xCen, yCen, minPoints, numOfCircles, SCALE_CONST, xNoise, ...
+        yNoise, noisePointsSize)
+    close all
+    imageShow('DottedCircles')
+    imageShow('WholeCircles')
 end
