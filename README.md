@@ -1,7 +1,7 @@
 # Circle Hough Transform 
 ## Circle Detection using the Circle Hough Transform and Phase Coding
 
-The Circle Hough Transform is a technique used in image processing for detecting circles in imperfect images. The circle candidates are produced by “voting” in the Hough parameter space and then selecting local maxima in an accumulator array.
+The Circle Hough Transform is a technique used in image processing for detecting imperfect circles in  images. The circle candidates are produced by “voting” in the Hough parameter space and then selecting local maxima in an accumulator array.
 
 The problem with the classical Hough Transform is the requirement of a 3-D array for storing votes for multiple radii (2-D for the coordinates of the center and the 3rd Dimension for the radii), which results in large storage requirements and long processing times. 
 
@@ -30,3 +30,6 @@ as the fnction input arguments you can insert the number of dotted circles you w
 After creating the imperfect circles image, run CirclsDetector.m to detect the circles. the script will plot the detected circles and the rest of the unused pixels. in the function call you can insert the minimun number of dots needed to form a circle and also the minimum and maximun radius to set the radii range of the circles you wish to find, or you can leave it empty to set the defult minimum of 3 dots and the radii range between quarter and half of the image side. you can also insert only the first argument, leaving the radii range to the default set.
 
 Enjoy!
+
+## References
+T.J Atherton, D.J. Kerbyson. "Size invariant circle detection." Image and Vision Computing. Volume 17, Number 11, 1999, pp. 795-803.
