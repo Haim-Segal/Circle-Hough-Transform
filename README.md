@@ -32,4 +32,4 @@ After creating the imperfect circles image, run CirclsDetector.m to detect the c
 Enjoy!
 
 ## References
-T.J Atherton, D.J. Kerbyson. "Size invariant circle detection." Image and Vision Computing. Volume 17, Number 11, 1999, pp. 795-803.
+[T.J Atherton, D.J. Kerbyson. "Size invariant circle detection." Image and Vision Computing. Volume 17, Number 11, 1999, pp. 795-803.](https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.24.3310&rep=rep1&type=pdf)
