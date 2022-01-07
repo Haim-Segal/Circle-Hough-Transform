@@ -1,5 +1,5 @@
 # Circle Hough Transform 
-## Circle Detection using the Circle Hough Transform and Phase Coding
+## Circle Detection using the Circle Hough Transform and phase coding
 
 The Circle Hough Transform is a technique used in image processing for detecting imperfect circles in  images. The circle candidates are produced by “voting” in the Hough parameter space and then selecting local maxima in an accumulator array.
 
